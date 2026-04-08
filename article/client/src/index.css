@@ -1,0 +1,138 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color: #18212b;
+  background: #f4f1ea;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", Inter, system-ui, sans-serif;
+  background:
+    radial-gradient(circle at top left, rgba(39, 93, 82, 0.14), transparent 30%),
+    radial-gradient(circle at top right, rgba(156, 122, 43, 0.1), transparent 24%),
+    radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.75), transparent 35%),
+    linear-gradient(180deg, #f6f2eb 0%, #eee8de 100%);
+  background-attachment: fixed;
+  overflow-x: hidden;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(24, 33, 43, 0.15);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.page-shell {
+  @apply mx-auto w-full max-w-[1600px] px-4 py-5 sm:px-6 lg:px-8 lg:py-6;
+}
+
+.surface {
+  @apply rounded-3xl border border-line/80 bg-panel shadow-panel backdrop-blur-md;
+}
+
+.section-title {
+  @apply font-display text-2xl text-ink sm:text-3xl;
+}
+
+.section-subtitle {
+  @apply mt-2 max-w-2xl text-sm leading-6 text-muted sm:text-base;
+}
+
+.ambient-orb {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(10px);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.ambient-orb.one {
+  width: 14rem;
+  height: 14rem;
+  background: rgba(39, 93, 82, 0.12);
+  top: 4rem;
+  right: -3rem;
+}
+
+.ambient-orb.two {
+  width: 12rem;
+  height: 12rem;
+  background: rgba(156, 122, 43, 0.1);
+  bottom: -2rem;
+  left: -1rem;
+}
+
+.panel-grid {
+  background-image:
+    linear-gradient(rgba(24, 33, 43, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(24, 33, 43, 0.04) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.soft-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(24, 33, 43, 0.12), transparent);
+}
+
+.interactive-lift {
+  transition: transform 260ms ease, box-shadow 260ms ease, border-color 260ms ease, background-color 260ms ease;
+}
+
+.interactive-lift:hover {
+  transform: translateY(-4px);
+}
+
+.tilt-sheen {
+  position: relative;
+  overflow: hidden;
+}
+
+.tilt-sheen::after {
+  content: "";
+  position: absolute;
+  inset: -120% auto auto -40%;
+  width: 40%;
+  height: 260%;
+  transform: rotate(18deg);
+  background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.34), transparent);
+  opacity: 0;
+  transition: opacity 260ms ease, transform 360ms ease;
+  pointer-events: none;
+}
+
+.tilt-sheen:hover::after {
+  opacity: 1;
+  transform: rotate(18deg) translateX(260%);
+}
