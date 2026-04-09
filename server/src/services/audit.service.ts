@@ -11,16 +11,25 @@ type AuditInput = {
 };
 
 export async function createAuditLog(input: AuditInput) {
-  await prisma.auditLog.create({
-    data: {
-      actorId: input.actorId ?? null,
+  try {
+    await prisma.auditLog.create({
+      data: {
+        actorId: input.actorId ?? null,
+        action: input.action,
+        entityType: input.entityType,
+        entityId: input.entityId ?? null,
+        description: input.description,
+        metadata: input.metadata as Prisma.InputJsonValue | undefined
+      }
+    });
+  } catch (error) {
+    console.error("Audit log write failed", {
       action: input.action,
       entityType: input.entityType,
       entityId: input.entityId ?? null,
-      description: input.description,
-      metadata: input.metadata as Prisma.InputJsonValue | undefined
-    }
-  });
+      error
+    });
+  }
 }
 
 export async function clearAuditLogs() {
