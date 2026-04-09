@@ -25,8 +25,7 @@ export function errorHandler(
   }
 
   const status = error.status ?? 500;
-  const message = status >= 500 ? "An unexpected error occurred" : error.message;
+  const message = status >= 500 && status !== 503 ? "An unexpected error occurred" : error.message;
 
   return res.status(status).json(fail(message));
 }
-
