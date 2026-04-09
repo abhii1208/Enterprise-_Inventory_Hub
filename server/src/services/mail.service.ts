@@ -3,18 +3,25 @@ import createHttpError from "http-errors";
 import { env } from "../config/env.js";
 
 function getTransporter() {
-  if (!env.SMTP_HOST || !env.SMTP_PORT || !env.SMTP_USER || !env.SMTP_PASS || !env.SMTP_FROM) {
+  const host = env.SMTP_HOST?.trim();
+  const user = env.SMTP_USER?.trim();
+  const pass = env.SMTP_PASS?.replace(/\s+/g, "");
+  const from = env.SMTP_FROM?.trim();
+
+  if (!host || !env.SMTP_PORT || !user || !pass || !from) {
     throw createHttpError(503, "Email service is not configured");
   }
 
   return nodemailer.createTransport({
-    host: env.SMTP_HOST,
+    service: host === "smtp.gmail.com" ? "gmail" : undefined,
+    host,
     port: env.SMTP_PORT,
     secure: env.SMTP_SECURE,
     auth: {
-      user: env.SMTP_USER,
-      pass: env.SMTP_PASS
-    }
+      user,
+      pass
+    },
+    requireTLS: !env.SMTP_SECURE
   });
 }
 
@@ -28,13 +35,14 @@ export async function sendMail(options: {
   const transporter = getTransporter();
   try {
     await transporter.sendMail({
-      from: env.SMTP_FROM,
+      from: env.SMTP_FROM?.trim(),
       to: options.to.join(","),
       subject: options.subject,
       text: options.text,
       html: options.html
     });
-  } catch {
+  } catch (error) {
+    console.error("Email send failed", error);
     throw createHttpError(
       503,
       options.errorMessage ?? "Email could not be sent. Please contact the admin directly or configure SMTP."
