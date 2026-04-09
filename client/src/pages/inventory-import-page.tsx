@@ -16,12 +16,14 @@ import { InventoryResultsTable } from "../components/ui/inventory-results-table"
 import { SearchBar } from "../components/ui/search-bar";
 import { Select } from "../components/ui/select";
 import { Skeleton } from "../components/ui/skeleton";
+import type { ImportPreview } from "../lib/types";
 
 export function InventoryImportPage() {
   const [file, setFile] = useState<File | null>(null);
   const [sku, setSku] = useState("");
   const [selectedItemId, setSelectedItemId] = useState<string>("");
   const [showUploadPanel, setShowUploadPanel] = useState(false);
+  const [lastImportSummary, setLastImportSummary] = useState<ImportPreview | null>(null);
   const resultPanelRef = useRef<HTMLDivElement | null>(null);
 
   const currentInventoryQuery = useQuery({
@@ -35,20 +37,19 @@ export function InventoryImportPage() {
     }
   }, [currentInventoryQuery.data]);
 
-  const previewMutation = useMutation({
-    mutationFn: previewImport,
-    onSuccess: () => toast.success("Import preview ready")
-  });
-
-  const commitMutation = useMutation({
-    mutationFn: commitImport,
-    onSuccess: async () => {
-      toast.success("Import successful");
+  const importWorkbookMutation = useMutation({
+    mutationFn: async (selectedFile: File) => {
+      const preview = await previewImport(selectedFile);
+      await commitImport(preview);
+      return preview;
+    },
+    onSuccess: async (preview) => {
+      setLastImportSummary(preview);
+      toast.success("Import successful. Enter the SKU code to continue.");
       setFile(null);
       setSku("");
       setSelectedItemId("");
       setShowUploadPanel(false);
-      previewMutation.reset();
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["inventory", "current"] }),
         queryClient.invalidateQueries({ queryKey: ["admin", "dashboard"] }),
@@ -236,45 +237,36 @@ export function InventoryImportPage() {
                 <FileDropzone file={file} onChange={setFile} />
               </div>
               <div className="mt-5 flex flex-wrap gap-3">
-                <Button onClick={() => file && previewMutation.mutate(file)} disabled={!file || previewMutation.isPending}>
-                  {previewMutation.isPending ? "Validating..." : "Preview import"}
+                <Button onClick={() => file && importWorkbookMutation.mutate(file)} disabled={!file || importWorkbookMutation.isPending}>
+                  {importWorkbookMutation.isPending ? "Importing..." : "Import workbook"}
                 </Button>
                 <Button
                   variant="ghost"
                   onClick={() => {
                     setFile(null);
-                    previewMutation.reset();
+                    setLastImportSummary(null);
                   }}
-                  disabled={!file && !previewMutation.data}
+                  disabled={!file && !lastImportSummary}
                 >
                   Upload another file
                 </Button>
-                {previewMutation.data ? (
-                  <Button
-                    variant="secondary"
-                    onClick={() => commitMutation.mutate(previewMutation.data)}
-                    disabled={commitMutation.isPending}
-                  >
-                    {commitMutation.isPending ? "Importing..." : "Save imported inventory"}
-                  </Button>
-                ) : null}
               </div>
             </div>
 
             <div className="space-y-4">
-              {previewMutation.data ? (
+              {lastImportSummary ? (
                 <>
                   <div className="flex flex-wrap gap-3">
-                    <Badge>{previewMutation.data.fileName}</Badge>
+                    <Badge>{lastImportSummary.fileName}</Badge>
                     <Badge className="border-brand-100 bg-brand-50 text-brand-600">
-                      {previewMutation.data.rowCount} valid rows
+                      {lastImportSummary.rowCount} valid rows
                     </Badge>
-                    <Badge className={previewMutation.data.failedRows ? "text-danger" : ""}>
-                      {previewMutation.data.failedRows} skipped
+                    <Badge className={lastImportSummary.failedRows ? "text-danger" : ""}>
+                      {lastImportSummary.failedRows} skipped
                     </Badge>
                   </div>
                   <DataTable
-                    rows={previewMutation.data.sampleRows}
+                    rows={lastImportSummary.sampleRows}
                     empty={<EmptyState title="No preview rows" description="The uploaded file did not contain usable inventory rows." />}
                     columns={[
                       {
@@ -302,16 +294,16 @@ export function InventoryImportPage() {
                 <div className="rounded-3xl border border-line bg-white/72 p-5">
                   <p className="text-sm font-semibold text-ink">Upload once, then continue working.</p>
                   <p className="mt-2 text-sm leading-6 text-muted">
-                    Preview the file, save the imported rows, and the new master becomes available immediately for both admin and user sessions.
+                    Importing now validates and saves the workbook in one step, then you can search the SKU immediately.
                   </p>
                 </div>
               )}
             </div>
           </div>
 
-          {previewMutation.data?.errors.length ? (
+          {lastImportSummary?.errors.length ? (
             <div className="mt-5 grid gap-3 lg:grid-cols-2">
-              {previewMutation.data.errors.map((error) => (
+              {lastImportSummary.errors.map((error) => (
                 <div key={`${error.row}-${error.message}`} className="rounded-2xl border border-line bg-white/75 px-4 py-3">
                   <p className="font-semibold text-ink">Row {error.row}</p>
                   <p className="mt-1 text-sm text-muted">{error.message}</p>
