@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Inventory Hub
 
 Inventory Hub is a secure internal inventory search application with admin-managed users, Excel-based inventory imports, audit visibility, and a polished enterprise UI.
@@ -112,3 +113,6 @@ Accepted columns:
 - `Image`
 
 The importer trims values, ignores blank rows, validates image URLs, reports row-level errors, and replaces the active master inventory in a transaction when committed.
+=======
+# Enterprise-_Inventory_Hub
+>>>>>>> 6dda819099f4bbc292b270b9f08aa0e7e357b056
