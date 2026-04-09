@@ -72,6 +72,46 @@ export async function previewImport(req: Request, res: Response) {
   res.json(success(preview, "Import preview generated"));
 }
 
+export async function importAndCommit(req: Request, res: Response) {
+  if (!req.file) {
+    res.status(400).json(fail("Excel file is required"));
+    return;
+  }
+
+  const preview = await previewInventoryImport(req.file.path, req.file.originalname);
+  const result = await commitInventoryImport(
+    {
+      fileName: preview.fileName,
+      rows: preview.rows,
+      errors: preview.errors
+    },
+    req.user!.id
+  );
+
+  await createAuditLog({
+    actorId: req.user!.id,
+    action: "IMPORT_WORKBOOK",
+    entityType: "IMPORT",
+    entityId: result.importLog.id,
+    description: `Imported workbook ${preview.fileName}`,
+    metadata: {
+      rowsImported: result.rowsImported,
+      failedRows: result.failedRows.length
+    }
+  });
+
+  res.json(
+    success(
+      {
+        ...preview,
+        importLog: result.importLog,
+        rowsImported: result.rowsImported
+      },
+      "Inventory imported successfully"
+    )
+  );
+}
+
 export async function commitImport(req: Request, res: Response) {
   const payload = commitSchema.parse(req.body);
   const result = await commitInventoryImport(

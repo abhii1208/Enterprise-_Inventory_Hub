@@ -28,6 +28,19 @@ export async function previewImport(file: File) {
   return response.data.data;
 }
 
+export async function importWorkbook(file: File) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await http.post<ApiResponse<ImportPreview>>("/inventory/import", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data"
+    }
+  });
+
+  return response.data.data;
+}
+
 export async function commitImport(payload: ImportPreview) {
   const response = await http.post<ApiResponse<unknown>>("/inventory/import/commit", payload);
   return response.data;

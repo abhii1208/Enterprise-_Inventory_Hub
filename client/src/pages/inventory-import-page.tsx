@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { ArrowRight, Database, Upload } from "lucide-react";
 import { toast } from "sonner";
-import { commitImport, getCurrentInventory, previewImport, searchInventory } from "../api/inventory";
+import { getCurrentInventory, importWorkbook, searchInventory } from "../api/inventory";
 import { queryClient } from "../app/query-client";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
@@ -38,11 +38,7 @@ export function InventoryImportPage() {
   }, [currentInventoryQuery.data]);
 
   const importWorkbookMutation = useMutation({
-    mutationFn: async (selectedFile: File) => {
-      const preview = await previewImport(selectedFile);
-      await commitImport(preview);
-      return preview;
-    },
+    mutationFn: importWorkbook,
     onSuccess: async (preview) => {
       setLastImportSummary(preview);
       toast.success("Import successful. Enter the SKU code to continue.");
