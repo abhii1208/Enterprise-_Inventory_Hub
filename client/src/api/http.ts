@@ -1,8 +1,13 @@
 import axios from "axios";
 import { toast } from "sonner";
 
+const inferredProductionApi =
+  typeof window !== "undefined" && window.location.hostname.endsWith(".vercel.app")
+    ? "https://enterprise-inventory-hub.onrender.com/api"
+    : undefined;
+
 export const http = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ?? "http://localhost:4000/api",
+  baseURL: import.meta.env.VITE_API_URL ?? inferredProductionApi ?? "http://localhost:4000/api",
   withCredentials: true
 });
 

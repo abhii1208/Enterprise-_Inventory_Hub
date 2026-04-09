@@ -30,11 +30,16 @@ const loginLimiter = rateLimit({
 });
 
 router.post("/login", loginLimiter, asyncHandler(login));
+router.post("/signin", loginLimiter, asyncHandler(login));
 router.get("/bootstrap-status", asyncHandler(bootstrapStatus));
 router.post("/register-first-admin", asyncHandler(registerBootstrapAdmin));
+router.post("/register-admin", asyncHandler(registerBootstrapAdmin));
+router.post("/signup", asyncHandler(registerBootstrapAdmin));
 router.post("/request-password-help", asyncHandler(requestPasswordHelpController));
 router.post("/forgot-password/request-otp", asyncHandler(requestForgotPasswordOtp));
+router.post("/forgot-password/request", asyncHandler(requestForgotPasswordOtp));
 router.post("/forgot-password/verify-otp", asyncHandler(verifyForgotPasswordOtpController));
+router.post("/forgot-password/verify", asyncHandler(verifyForgotPasswordOtpController));
 router.post("/forgot-password/reset", asyncHandler(resetForgotPassword));
 router.post("/logout", requireAuth, asyncHandler(logout));
 router.get("/me", requireAuth, asyncHandler(me));
