@@ -1,5 +1,3 @@
-import fs from "node:fs/promises";
-import path from "node:path";
 import createHttpError from "http-errors";
 import { nanoid } from "nanoid";
 import xlsx from "xlsx";
@@ -7,7 +5,7 @@ import { prisma } from "../config/prisma.js";
 import { cleanText, normalizeSku, toOptionalText } from "../utils/normalize.js";
 
 const REQUIRED_HEADERS = ["Sku Code", "Item Name", "Shelf", "Type", "Qty", "Size", "Color", "Image"];
-const tempDir = path.resolve(process.cwd(), "temp");
+const PREVIEW_TTL_MS = 30 * 60 * 1000;
 
 type PreviewRow = {
   skuCode: string;
@@ -24,6 +22,16 @@ type PreviewError = {
   row: number;
   message: string;
 };
+
+type PreviewSession = {
+  fileName: string;
+  previewToken: string;
+  createdAt: number;
+  rows: PreviewRow[];
+  errors: PreviewError[];
+};
+
+const previewStore = new Map<string, PreviewSession>();
 
 function isValidUrl(value: string) {
   try {
@@ -122,18 +130,19 @@ export async function previewInventoryImport(filePath: string, fileName: string)
   }
 
   const previewToken = nanoid(16);
-  const previewPath = path.join(tempDir, `${previewToken}.json`);
-  await fs.writeFile(
-    previewPath,
-    JSON.stringify({
-      fileName,
-      previewToken,
-      createdAt: new Date().toISOString(),
-      rows: validRows,
-      errors
-    }),
-    "utf8"
-  );
+  previewStore.set(previewToken, {
+    fileName,
+    previewToken,
+    createdAt: Date.now(),
+    rows: validRows,
+    errors
+  });
+
+  for (const [token, session] of previewStore.entries()) {
+    if (Date.now() - session.createdAt > PREVIEW_TTL_MS) {
+      previewStore.delete(token);
+    }
+  }
 
   return {
     previewToken,
@@ -146,13 +155,10 @@ export async function previewInventoryImport(filePath: string, fileName: string)
 }
 
 export async function commitInventoryImport(previewToken: string, uploadedById: string) {
-  const previewPath = path.join(tempDir, `${previewToken}.json`);
-  let payload: { fileName: string; rows: PreviewRow[]; errors: PreviewError[] };
+  const payload = previewStore.get(previewToken);
 
-  try {
-    const raw = await fs.readFile(previewPath, "utf8");
-    payload = JSON.parse(raw) as typeof payload;
-  } catch {
+  if (!payload || Date.now() - payload.createdAt > PREVIEW_TTL_MS) {
+    previewStore.delete(previewToken);
     throw createHttpError(404, "Import preview session not found or expired");
   }
 
@@ -192,7 +198,7 @@ export async function commitInventoryImport(previewToken: string, uploadedById: 
     return importLog;
   });
 
-  await fs.unlink(previewPath).catch(() => undefined);
+  previewStore.delete(previewToken);
 
   return {
     importLog: result,
