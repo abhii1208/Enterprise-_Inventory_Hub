@@ -184,11 +184,12 @@ export async function commitInventoryImport(
     throw createHttpError(404, "Import preview session not found or expired");
   }
 
-  const result = await prisma.$transaction(async (tx) => {
-    await tx.inventoryItem.deleteMany();
-
-    const importLog = await tx.importLog.create({
+  const importLogId = nanoid();
+  const operations = [
+    prisma.inventoryItem.deleteMany(),
+    prisma.importLog.create({
       data: {
+        id: importLogId,
         fileName: payload.fileName,
         uploadedById,
         rowsImported: payload.rows.length,
@@ -198,12 +199,15 @@ export async function commitInventoryImport(
           ? `Imported with ${payload.errors.length} skipped rows`
           : "Imported successfully"
       }
-    });
+    }),
+    ...payload.rows.reduce<Array<ReturnType<typeof prisma.inventoryItem.createMany>>>((accumulator, _row, index) => {
+      if (index % IMPORT_BATCH_SIZE !== 0) {
+        return accumulator;
+      }
 
-    if (payload.rows.length) {
-      for (let index = 0; index < payload.rows.length; index += IMPORT_BATCH_SIZE) {
-        const batch = payload.rows.slice(index, index + IMPORT_BATCH_SIZE);
-        await tx.inventoryItem.createMany({
+      const batch = payload.rows.slice(index, index + IMPORT_BATCH_SIZE);
+      accumulator.push(
+        prisma.inventoryItem.createMany({
           data: batch.map((row) => ({
             skuCode: row.skuCode,
             skuCodeNormalized: normalizeSku(row.skuCode),
@@ -214,13 +218,19 @@ export async function commitInventoryImport(
             size: row.size,
             color: row.color,
             imageUrl: row.imageUrl,
-            importLogId: importLog.id
+            importLogId
           }))
-        });
-      }
-    }
+        })
+      );
 
-    return importLog;
+      return accumulator;
+    }, [])
+  ];
+
+  await prisma.$transaction(operations);
+
+  const result = await prisma.importLog.findUniqueOrThrow({
+    where: { id: importLogId }
   });
 
   if ("previewToken" in input) {
