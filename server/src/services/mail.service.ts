@@ -12,11 +12,20 @@ function getTransporter() {
     throw createHttpError(503, "Email service is not configured");
   }
 
+  if (host === "smtp.gmail.com") {
+    return nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user,
+        pass
+      }
+    });
+  }
+
   return nodemailer.createTransport({
-    service: host === "smtp.gmail.com" ? "gmail" : undefined,
     host,
     port: env.SMTP_PORT,
-    secure: env.SMTP_SECURE,
+    secure: env.SMTP_SECURE || env.SMTP_PORT === 465,
     auth: {
       user,
       pass

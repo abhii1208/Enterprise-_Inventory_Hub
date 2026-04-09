@@ -83,7 +83,7 @@ export function LoginPage() {
   });
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-4 sm:py-6">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-3 py-4 sm:px-4 sm:py-6">
       <div className="ambient-orb one" />
       <div className="ambient-orb two" />
       <div className="grid w-full max-w-[1180px] gap-4 lg:grid-cols-[0.96fr_0.9fr] lg:items-stretch">
@@ -121,12 +121,12 @@ export function LoginPage() {
           </div>
         </Card>
 
-        <Card className="relative overflow-hidden p-5 sm:p-6 lg:p-7">
+        <Card className="relative overflow-hidden p-4 sm:p-6 lg:p-7">
           <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-90" />
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-500">
             {authMode === "register" ? "Register admin" : "Sign in"}
           </p>
-          <h2 className="mt-2 font-display text-3xl text-ink sm:text-[40px]">Inventory Hub</h2>
+          <h2 className="mt-2 font-display text-2xl text-ink sm:text-[40px]">Inventory Hub</h2>
           <p className="mt-2 text-sm leading-6 text-muted">
             {authMode === "register"
               ? "Create the admin account from here, then sign in and continue into the workspace."
@@ -136,7 +136,7 @@ export function LoginPage() {
           <div className="mt-5 grid grid-cols-2 gap-2 rounded-2xl border border-line bg-white/70 p-1">
             <button
               type="button"
-              className={`rounded-2xl px-4 py-2.5 text-sm font-semibold transition ${
+                className={`rounded-2xl px-3 py-2.5 text-sm font-semibold transition ${
                 authMode === "login" ? "bg-brand-500 text-white shadow-sm" : "text-muted hover:bg-white"
               }`}
               onClick={() => setAuthMode("login")}
@@ -145,7 +145,7 @@ export function LoginPage() {
             </button>
             <button
               type="button"
-              className={`rounded-2xl px-4 py-2.5 text-sm font-semibold transition ${
+                className={`rounded-2xl px-3 py-2.5 text-sm font-semibold transition ${
                 authMode === "register" ? "bg-brand-500 text-white shadow-sm" : "text-muted hover:bg-white"
               }`}
               onClick={() => setAuthMode("register")}

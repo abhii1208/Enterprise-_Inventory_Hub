@@ -32,7 +32,7 @@ export function DetailCard({ item, siblings = 1 }: DetailCardProps) {
             <ImagePreview
               src={item.imageUrl}
               alt={item.itemName}
-              className="h-[400px] w-full border border-white/60 bg-white shadow-soft sm:h-[440px]"
+              className="h-[260px] w-full border border-white/60 bg-white shadow-soft sm:h-[440px]"
               imageClassName="object-contain bg-white"
             />
           </div>

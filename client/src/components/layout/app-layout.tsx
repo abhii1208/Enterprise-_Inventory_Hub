@@ -63,34 +63,42 @@ export function AppLayout() {
             </Button>
           </div>
           {open ? (
-            <div className="surface mt-3 p-4">
-              <Navigation
-                userRole={user?.role}
-                mobile
-                showUserMenu={showUserMenu}
-                onToggleUserMenu={() => setShowUserMenu((value) => !value)}
-                onNavigate={() => setOpen(false)}
-              />
-              <SidebarFooter
-                name={user?.name ?? ""}
-                email={user?.email ?? ""}
-                onLogout={() => logoutMutation.mutate()}
-              />
+            <div className="fixed inset-0 z-40 bg-ink/30 backdrop-blur-sm">
+              <div className="absolute inset-x-4 top-4 max-h-[calc(100vh-2rem)] overflow-y-auto rounded-3xl border border-line bg-panel p-4 shadow-soft">
+                <div className="mb-4 flex items-center justify-between">
+                  <BrandBlock compact />
+                  <Button variant="secondary" onClick={() => setOpen(false)}>
+                    Close
+                  </Button>
+                </div>
+                <Navigation
+                  userRole={user?.role}
+                  mobile
+                  showUserMenu={showUserMenu}
+                  onToggleUserMenu={() => setShowUserMenu((value) => !value)}
+                  onNavigate={() => setOpen(false)}
+                />
+                <SidebarFooter
+                  name={user?.name ?? ""}
+                  email={user?.email ?? ""}
+                  onLogout={() => logoutMutation.mutate()}
+                />
+              </div>
             </div>
           ) : null}
         </div>
 
         <main className="relative min-w-0 lg:col-start-2 lg:h-[calc(100vh-3rem)] lg:overflow-y-auto lg:pr-2">
           <header className="surface tilt-sheen mb-5 px-5 py-4">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-500">
+                <p className="hidden text-xs font-semibold uppercase tracking-[0.2em] text-brand-500 sm:block">
                   Internal Inventory Workspace
                 </p>
-                <h1 className="mt-2 font-display text-3xl text-ink">Inventory Hub</h1>
-                <p className="mt-2 text-sm text-muted">Saved inventory, faster lookups, and cleaner daily operations.</p>
+                <h1 className="mt-1 font-display text-2xl text-ink sm:mt-2 sm:text-3xl">Inventory Hub</h1>
+                <p className="mt-1 text-sm text-muted sm:mt-2">Saved inventory and faster daily lookups.</p>
               </div>
-              <div className="flex flex-wrap items-center gap-3 text-sm text-muted">
+              <div className="flex flex-wrap items-center gap-2 text-sm text-muted">
                 <div className="rounded-2xl border border-line bg-white/70 px-4 py-2">
                   Signed in as <span className="font-semibold text-ink">{user?.name}</span>
                 </div>
@@ -117,7 +125,7 @@ function BrandBlock({ compact = false }: { compact?: boolean }) {
         </div>
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-500">Enterprise</p>
-          <h2 className="font-display text-2xl text-ink">Inventory Hub</h2>
+          <h2 className={cn("font-display text-2xl text-ink", compact && "text-xl")}>Inventory Hub</h2>
         </div>
       </div>
     </div>

@@ -175,7 +175,7 @@ export function InventoryImportPage() {
             {!searchItems.length ? (
               <EmptyState title="No record found" description="No inventory rows matched that SKU code in the saved master." />
             ) : (
-              <div className="grid gap-4 xl:grid-cols-[280px_minmax(0,1fr)]">
+              <div className="grid gap-4 2xl:grid-cols-[280px_minmax(0,1fr)]">
                 <Card className="p-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-500">Match selection</p>
                   <h4 className="mt-2 font-display text-xl text-ink">Choose the exact batch</h4>
@@ -225,7 +225,7 @@ export function InventoryImportPage() {
 
       {showUploadPanel ? (
         <Card className="p-5">
-          <div className="grid gap-5 xl:grid-cols-[1fr_0.9fr]">
+          <div className="grid gap-5 2xl:grid-cols-[1fr_0.9fr]">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-500">Upload workbook</p>
               <h3 className="mt-2 font-display text-3xl text-ink">Replace the saved inventory master</h3>
