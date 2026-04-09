@@ -2,7 +2,13 @@ import nodemailer from "nodemailer";
 import createHttpError from "http-errors";
 import { env } from "../config/env.js";
 
+let cachedTransporter: nodemailer.Transporter | null = null;
+
 function getTransporter() {
+  if (cachedTransporter) {
+    return cachedTransporter;
+  }
+
   const host = env.SMTP_HOST?.trim();
   const user = env.SMTP_USER?.trim();
   const pass = env.SMTP_PASS?.replace(/\s+/g, "");
@@ -13,25 +19,38 @@ function getTransporter() {
   }
 
   if (host === "smtp.gmail.com") {
-    return nodemailer.createTransport({
+    cachedTransporter = nodemailer.createTransport({
       service: "gmail",
+      pool: true,
+      maxConnections: 1,
+      maxMessages: 100,
       auth: {
         user,
         pass
       }
     });
+
+    return cachedTransporter;
   }
 
-  return nodemailer.createTransport({
+  cachedTransporter = nodemailer.createTransport({
     host,
     port: env.SMTP_PORT,
     secure: env.SMTP_SECURE || env.SMTP_PORT === 465,
+    pool: true,
+    maxConnections: 1,
+    maxMessages: 100,
     auth: {
       user,
       pass
     },
-    requireTLS: !env.SMTP_SECURE
+    requireTLS: !env.SMTP_SECURE,
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000
   });
+
+  return cachedTransporter;
 }
 
 export async function sendMail(options: {
