@@ -58,7 +58,7 @@ const forgotPasswordResetSchema = z.object({
 function setAuthCookie(res: Response, token: string) {
   res.cookie(env.COOKIE_NAME, token, {
     httpOnly: true,
-    sameSite: "lax",
+    sameSite: isProduction ? "none" : "lax",
     secure: isProduction,
     maxAge: 8 * 60 * 60 * 1000
   });
@@ -232,7 +232,11 @@ export async function requestChangePasswordOtp(req: Request, res: Response) {
 }
 
 export async function logout(req: Request, res: Response) {
-  res.clearCookie(env.COOKIE_NAME);
+  res.clearCookie(env.COOKIE_NAME, {
+    httpOnly: true,
+    sameSite: isProduction ? "none" : "lax",
+    secure: isProduction
+  });
 
   await createAuditLog({
     actorId: req.user?.id,
