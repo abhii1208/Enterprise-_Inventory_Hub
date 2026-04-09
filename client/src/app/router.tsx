@@ -5,7 +5,6 @@ import { RoleGuard } from "../routes/role-guard";
 import { AdminDashboardPage } from "../pages/admin-dashboard-page";
 import { AuditLogsPage } from "../pages/audit-logs-page";
 import { CurrentImportedRowsPage } from "../pages/current-imported-rows-page";
-import { ForgotPasswordPage } from "../pages/forgot-password-page";
 import { ImportHistoryPage } from "../pages/import-history-page";
 import { InventoryImportPage } from "../pages/inventory-import-page";
 import { LoginPage } from "../pages/login-page";
@@ -16,10 +15,6 @@ export const router = createBrowserRouter([
   {
     path: "/login",
     element: <LoginPage />
-  },
-  {
-    path: "/forgot-password",
-    element: <ForgotPasswordPage />
   },
   {
     path: "/",
