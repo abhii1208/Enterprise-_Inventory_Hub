@@ -1,15 +1,21 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { ArrowRight, LockKeyhole, ShieldCheck } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { login } from "../api/auth";
+import { fetchBootstrapStatus, login, registerFirstAdmin } from "../api/auth";
 import { queryClient } from "../app/query-client";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 
 type LoginForm = {
+  email: string;
+  password: string;
+};
+
+type RegisterForm = {
+  name: string;
   email: string;
   password: string;
 };
@@ -26,6 +32,21 @@ export function LoginPage() {
     }
   });
 
+  const registerForm = useForm<RegisterForm>({
+    defaultValues: {
+      name: "",
+      email: "",
+      password: ""
+    }
+  });
+
+  const bootstrapStatusQuery = useQuery({
+    queryKey: ["auth", "bootstrap-status"],
+    queryFn: fetchBootstrapStatus
+  });
+
+  const requiresSetup = bootstrapStatusQuery.data?.requiresSetup ?? false;
+
   const loginMutation = useMutation({
     mutationFn: login,
     onSuccess: (user) => {
@@ -41,6 +62,26 @@ export function LoginPage() {
         typeof (error as { response?: { data?: { message?: string } } }).response?.data?.message === "string"
           ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
           : "Invalid email or password";
+
+      toast.error(message);
+    }
+  });
+
+  const registerMutation = useMutation({
+    mutationFn: registerFirstAdmin,
+    onSuccess: async () => {
+      toast.success("Admin registered successfully. Please sign in.");
+      registerForm.reset();
+      await queryClient.invalidateQueries({ queryKey: ["auth", "bootstrap-status"] });
+    },
+    onError: (error: unknown) => {
+      const message =
+        typeof error === "object" &&
+        error !== null &&
+        "response" in error &&
+        typeof (error as { response?: { data?: { message?: string } } }).response?.data?.message === "string"
+          ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+          : "Registration failed";
 
       toast.error(message);
     }
@@ -87,43 +128,79 @@ export function LoginPage() {
 
         <Card className="relative overflow-hidden p-5 sm:p-6 lg:p-7">
           <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-90" />
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-500">Sign in</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-500">
+            {requiresSetup ? "Register first admin" : "Sign in"}
+          </p>
           <h2 className="mt-2 font-display text-3xl text-ink sm:text-[40px]">Inventory Hub</h2>
           <p className="mt-2 text-sm leading-6 text-muted">
-            Use your assigned credentials to enter the workspace.
+            {requiresSetup
+              ? "Set up the first admin account once. After that, sign in and manage the workspace normally."
+              : "Use your assigned credentials to enter the workspace."}
           </p>
 
-          <form
-            className="mt-5 space-y-3.5"
-            onSubmit={loginForm.handleSubmit((values) => loginMutation.mutate(values))}
-          >
-            <div>
-              <label className="mb-1.5 block text-sm font-semibold text-ink">Email</label>
-              <Input type="email" {...loginForm.register("email")} />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-sm font-semibold text-ink">Password</label>
-              <Input type="password" {...loginForm.register("password")} />
-            </div>
-            <Button className="w-full py-3" type="submit" disabled={loginMutation.isPending}>
-              {loginMutation.isPending ? "Signing in..." : "Access workspace"}
-            </Button>
-          </form>
+          {requiresSetup ? (
+            <>
+              <form
+                className="mt-5 space-y-3.5"
+                onSubmit={registerForm.handleSubmit((values) => registerMutation.mutate(values))}
+              >
+                <div>
+                  <label className="mb-1.5 block text-sm font-semibold text-ink">Admin name</label>
+                  <Input type="text" {...registerForm.register("name")} />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-sm font-semibold text-ink">Admin email</label>
+                  <Input type="email" {...registerForm.register("email")} />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-sm font-semibold text-ink">Password</label>
+                  <Input type="password" {...registerForm.register("password")} />
+                </div>
+                <Button className="w-full py-3" type="submit" disabled={registerMutation.isPending || bootstrapStatusQuery.isLoading}>
+                  {registerMutation.isPending ? "Registering..." : "Register admin"}
+                </Button>
+              </form>
 
-          <div className="mt-4 text-right">
-            <Link to="/forgot-password" className="text-sm font-semibold text-brand-500 transition hover:text-brand-600">
-              Forgot password?
-            </Link>
-          </div>
+              <div className="mt-4 rounded-2xl border border-line bg-white/70 px-4 py-3 text-sm text-muted">
+                <p className="font-semibold text-ink">First-time setup</p>
+                <p className="mt-1">Create the first admin account here. After this step, the regular sign-in screen will be used.</p>
+              </div>
+            </>
+          ) : (
+            <>
+              <form
+                className="mt-5 space-y-3.5"
+                onSubmit={loginForm.handleSubmit((values) => loginMutation.mutate(values))}
+              >
+                <div>
+                  <label className="mb-1.5 block text-sm font-semibold text-ink">Email</label>
+                  <Input type="email" {...loginForm.register("email")} />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-sm font-semibold text-ink">Password</label>
+                  <Input type="password" {...loginForm.register("password")} />
+                </div>
+                <Button className="w-full py-3" type="submit" disabled={loginMutation.isPending}>
+                  {loginMutation.isPending ? "Signing in..." : "Access workspace"}
+                </Button>
+              </form>
 
-          <div className="mt-4 rounded-2xl border border-line bg-white/70 px-4 py-3 text-sm text-muted">
-            <p className="font-semibold text-ink">Need access?</p>
-            <p className="mt-1">Ask an admin to create your account and share your credentials securely.</p>
-            <div className="mt-2 inline-flex items-center gap-2 text-brand-500">
-              <ArrowRight className="h-4 w-4" />
-              Sign in to continue into the workspace.
-            </div>
-          </div>
+              <div className="mt-4 text-right">
+                <Link to="/forgot-password" className="text-sm font-semibold text-brand-500 transition hover:text-brand-600">
+                  Forgot password?
+                </Link>
+              </div>
+
+              <div className="mt-4 rounded-2xl border border-line bg-white/70 px-4 py-3 text-sm text-muted">
+                <p className="font-semibold text-ink">Need access?</p>
+                <p className="mt-1">Ask an admin to create your account and share your credentials securely.</p>
+                <div className="mt-2 inline-flex items-center gap-2 text-brand-500">
+                  <ArrowRight className="h-4 w-4" />
+                  Sign in to continue into the workspace.
+                </div>
+              </div>
+            </>
+          )}
         </Card>
       </div>
     </div>
