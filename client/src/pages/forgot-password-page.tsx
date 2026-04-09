@@ -96,9 +96,7 @@ export function ForgotPasswordPage() {
           </div>
         </div>
 
-        <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">
-          Request an OTP, verify it, then update your password. This page is designed to fit on one screen without scrolling on normal laptop sizes.
-        </p>
+        <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">Request an OTP, verify it, then update your password.</p>
 
         {statusMessage ? (
           <div className="mt-4 rounded-2xl border border-line bg-white/75 px-4 py-3 text-sm text-muted">{statusMessage}</div>
