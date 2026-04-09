@@ -265,3 +265,15 @@ export async function clearImportLogs() {
     deletedCount: result.count
   };
 }
+
+export async function clearCurrentInventory() {
+  const [inventoryResult, importLogResult] = await prisma.$transaction([
+    prisma.inventoryItem.deleteMany(),
+    prisma.importLog.deleteMany()
+  ]);
+
+  return {
+    deletedInventoryCount: inventoryResult.count,
+    deletedImportCount: importLogResult.count
+  };
+}

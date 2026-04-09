@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { ArrowRight, Database, Upload } from "lucide-react";
 import { toast } from "sonner";
-import { getCurrentInventory, importWorkbook, searchInventory } from "../api/inventory";
+import { getCurrentInventory, importWorkbook, removeCurrentInventory, searchInventory } from "../api/inventory";
 import { queryClient } from "../app/query-client";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
@@ -57,6 +57,23 @@ export function InventoryImportPage() {
   const searchMutation = useMutation({
     mutationFn: searchInventory,
     onError: () => toast.error("SKU lookup failed. Please try again.")
+  });
+
+  const removeInventoryMutation = useMutation({
+    mutationFn: removeCurrentInventory,
+    onSuccess: async (result) => {
+      toast.success(`Imported inventory removed (${result.deletedInventoryCount} rows cleared)`);
+      setLastImportSummary(null);
+      setSku("");
+      setSelectedItemId("");
+      searchMutation.reset();
+      setShowUploadPanel(true);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["inventory", "current"] }),
+        queryClient.invalidateQueries({ queryKey: ["admin", "dashboard"] }),
+        queryClient.invalidateQueries({ queryKey: ["admin", "import-history"] })
+      ]);
+    }
   });
 
   const searchItems = useMemo(
@@ -154,6 +171,15 @@ export function InventoryImportPage() {
                 <Upload className="h-4 w-4" />
                 {showUploadPanel ? "Hide upload" : currentInventory?.hasInventory ? "Replace import" : "Import workbook"}
               </Button>
+              {currentInventory?.hasInventory ? (
+                <Button
+                  variant="danger"
+                  onClick={() => removeInventoryMutation.mutate()}
+                  disabled={removeInventoryMutation.isPending}
+                >
+                  {removeInventoryMutation.isPending ? "Removing..." : "Remove imported inventory"}
+                </Button>
+              ) : null}
             </div>
           </div>
           <div className="mt-4">

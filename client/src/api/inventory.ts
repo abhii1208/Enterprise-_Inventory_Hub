@@ -8,6 +8,13 @@ export async function getCurrentInventory(page = 1, limit = 12) {
   return response.data.data;
 }
 
+export async function removeCurrentInventory() {
+  const response = await http.delete<ApiResponse<{ deletedInventoryCount: number; deletedImportCount: number }>>(
+    "/inventory/current"
+  );
+  return response.data.data;
+}
+
 export async function searchInventory(sku: string) {
   const response = await http.get<ApiResponse<InventorySearchResponse>>("/inventory/search", {
     params: { sku }

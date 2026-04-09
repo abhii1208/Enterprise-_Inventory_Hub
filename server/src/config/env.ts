@@ -3,6 +3,11 @@ import { z } from "zod";
 
 dotenv.config();
 
+const derivedSmtpUser = process.env.SMTP_USER ?? process.env.EMAIL_USER;
+const derivedSmtpPass = process.env.SMTP_PASS ?? process.env.EMAIL_PASS;
+const derivedSmtpFrom =
+  process.env.SMTP_FROM ?? (derivedSmtpUser ? `Inventory Hub <${derivedSmtpUser}>` : undefined);
+
 const envSchema = z.object({
   PORT: z.coerce.number().default(4000),
   DATABASE_URL: z.string().min(1),
@@ -23,5 +28,10 @@ const envSchema = z.object({
   SMTP_FROM: z.string().optional()
 });
 
-export const env = envSchema.parse(process.env);
+export const env = envSchema.parse({
+  ...process.env,
+  SMTP_USER: derivedSmtpUser,
+  SMTP_PASS: derivedSmtpPass,
+  SMTP_FROM: derivedSmtpFrom
+});
 export const isProduction = env.NODE_ENV === "production";

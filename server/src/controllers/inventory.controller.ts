@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { z } from "zod";
 import { createAuditLog } from "../services/audit.service.js";
-import { commitInventoryImport, previewInventoryImport } from "../services/import.service.js";
+import { clearCurrentInventory, commitInventoryImport, previewInventoryImport } from "../services/import.service.js";
 import { getCurrentInventorySnapshot, searchInventory } from "../services/inventory.service.js";
 import { fail, success } from "../utils/response.js";
 
@@ -138,4 +138,18 @@ export async function commitImport(req: Request, res: Response) {
   });
 
   res.json(success(result, "Inventory replaced successfully"));
+}
+
+export async function deleteCurrentInventory(req: Request, res: Response) {
+  const result = await clearCurrentInventory();
+
+  await createAuditLog({
+    actorId: req.user!.id,
+    action: "CLEAR_CURRENT_INVENTORY",
+    entityType: "IMPORT",
+    description: "Removed the active imported inventory master",
+    metadata: result
+  });
+
+  res.json(success(result, "Imported inventory removed successfully"));
 }

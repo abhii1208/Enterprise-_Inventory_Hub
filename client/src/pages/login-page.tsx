@@ -1,7 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { ArrowRight, LockKeyhole, ShieldCheck } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { toast } from "sonner";
 import { login, registerFirstAdmin } from "../api/auth";
@@ -200,12 +200,6 @@ export function LoginPage() {
                   {loginMutation.isPending ? "Signing in..." : "Access workspace"}
                 </Button>
               </form>
-
-              <div className="mt-4 text-right">
-                <Link to="/forgot-password" className="text-sm font-semibold text-brand-500 transition hover:text-brand-600">
-                  Forgot password?
-                </Link>
-              </div>
 
               <div className="mt-4 rounded-2xl border border-line bg-white/70 px-4 py-3 text-sm text-muted">
                 <p className="font-semibold text-ink">Need access?</p>
