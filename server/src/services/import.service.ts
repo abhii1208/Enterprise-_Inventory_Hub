@@ -6,6 +6,7 @@ import { cleanText, normalizeSku, toOptionalText } from "../utils/normalize.js";
 
 const REQUIRED_HEADERS = ["Sku Code", "Item Name", "Shelf", "Type", "Qty", "Size", "Color", "Image"];
 const PREVIEW_TTL_MS = 30 * 60 * 1000;
+const IMPORT_BATCH_SIZE = 250;
 
 type PreviewRow = {
   skuCode: string;
@@ -200,20 +201,23 @@ export async function commitInventoryImport(
     });
 
     if (payload.rows.length) {
-      await tx.inventoryItem.createMany({
-        data: payload.rows.map((row) => ({
-          skuCode: row.skuCode,
-          skuCodeNormalized: normalizeSku(row.skuCode),
-          itemName: row.itemName,
-          shelf: row.shelf,
-          type: row.type,
-          quantity: row.quantity,
-          size: row.size,
-          color: row.color,
-          imageUrl: row.imageUrl,
-          importLogId: importLog.id
-        }))
-      });
+      for (let index = 0; index < payload.rows.length; index += IMPORT_BATCH_SIZE) {
+        const batch = payload.rows.slice(index, index + IMPORT_BATCH_SIZE);
+        await tx.inventoryItem.createMany({
+          data: batch.map((row) => ({
+            skuCode: row.skuCode,
+            skuCodeNormalized: normalizeSku(row.skuCode),
+            itemName: row.itemName,
+            shelf: row.shelf,
+            type: row.type,
+            quantity: row.quantity,
+            size: row.size,
+            color: row.color,
+            imageUrl: row.imageUrl,
+            importLogId: importLog.id
+          }))
+        });
+      }
     }
 
     return importLog;
