@@ -1,9 +1,10 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { ArrowRight, LockKeyhole, ShieldCheck } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { toast } from "sonner";
-import { fetchBootstrapStatus, login, registerFirstAdmin } from "../api/auth";
+import { login, registerFirstAdmin } from "../api/auth";
 import { queryClient } from "../app/query-client";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
@@ -24,6 +25,7 @@ export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as { from?: string } | null)?.from ?? "/";
+  const [authMode, setAuthMode] = useState<"login" | "register">("login");
 
   const loginForm = useForm<LoginForm>({
     defaultValues: {
@@ -39,13 +41,6 @@ export function LoginPage() {
       password: ""
     }
   });
-
-  const bootstrapStatusQuery = useQuery({
-    queryKey: ["auth", "bootstrap-status"],
-    queryFn: fetchBootstrapStatus
-  });
-
-  const requiresSetup = bootstrapStatusQuery.data?.requiresSetup ?? false;
 
   const loginMutation = useMutation({
     mutationFn: login,
@@ -72,7 +67,7 @@ export function LoginPage() {
     onSuccess: async () => {
       toast.success("Admin registered successfully. Please sign in.");
       registerForm.reset();
-      await queryClient.invalidateQueries({ queryKey: ["auth", "bootstrap-status"] });
+      setAuthMode("login");
     },
     onError: (error: unknown) => {
       const message =
@@ -129,16 +124,37 @@ export function LoginPage() {
         <Card className="relative overflow-hidden p-5 sm:p-6 lg:p-7">
           <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-90" />
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-500">
-            {requiresSetup ? "Register first admin" : "Sign in"}
+            {authMode === "register" ? "Register admin" : "Sign in"}
           </p>
           <h2 className="mt-2 font-display text-3xl text-ink sm:text-[40px]">Inventory Hub</h2>
           <p className="mt-2 text-sm leading-6 text-muted">
-            {requiresSetup
-              ? "Set up the first admin account once. After that, sign in and manage the workspace normally."
+            {authMode === "register"
+              ? "Create the admin account from here, then sign in and continue into the workspace."
               : "Use your assigned credentials to enter the workspace."}
           </p>
 
-          {requiresSetup ? (
+          <div className="mt-5 grid grid-cols-2 gap-2 rounded-2xl border border-line bg-white/70 p-1">
+            <button
+              type="button"
+              className={`rounded-2xl px-4 py-2.5 text-sm font-semibold transition ${
+                authMode === "login" ? "bg-brand-500 text-white shadow-sm" : "text-muted hover:bg-white"
+              }`}
+              onClick={() => setAuthMode("login")}
+            >
+              Sign in
+            </button>
+            <button
+              type="button"
+              className={`rounded-2xl px-4 py-2.5 text-sm font-semibold transition ${
+                authMode === "register" ? "bg-brand-500 text-white shadow-sm" : "text-muted hover:bg-white"
+              }`}
+              onClick={() => setAuthMode("register")}
+            >
+              Register admin
+            </button>
+          </div>
+
+          {authMode === "register" ? (
             <>
               <form
                 className="mt-5 space-y-3.5"
@@ -156,14 +172,14 @@ export function LoginPage() {
                   <label className="mb-1.5 block text-sm font-semibold text-ink">Password</label>
                   <Input type="password" {...registerForm.register("password")} />
                 </div>
-                <Button className="w-full py-3" type="submit" disabled={registerMutation.isPending || bootstrapStatusQuery.isLoading}>
+                <Button className="w-full py-3" type="submit" disabled={registerMutation.isPending}>
                   {registerMutation.isPending ? "Registering..." : "Register admin"}
                 </Button>
               </form>
 
               <div className="mt-4 rounded-2xl border border-line bg-white/70 px-4 py-3 text-sm text-muted">
-                <p className="font-semibold text-ink">First-time setup</p>
-                <p className="mt-1">Create the first admin account here. After this step, the regular sign-in screen will be used.</p>
+                <p className="font-semibold text-ink">Admin setup</p>
+                <p className="mt-1">Use this form to create an admin account with your own credentials, then sign in.</p>
               </div>
             </>
           ) : (
