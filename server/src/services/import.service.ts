@@ -149,16 +149,37 @@ export async function previewInventoryImport(filePath: string, fileName: string)
     fileName,
     rowCount: validRows.length,
     failedRows: errors.length,
+    rows: validRows,
     sampleRows: validRows.slice(0, 8),
     errors
   };
 }
 
-export async function commitInventoryImport(previewToken: string, uploadedById: string) {
-  const payload = previewStore.get(previewToken);
+export async function commitInventoryImport(
+  input:
+    | { previewToken: string }
+    | {
+        fileName: string;
+        rows: PreviewRow[];
+        errors: PreviewError[];
+      },
+  uploadedById: string
+) {
+  const payload =
+    "previewToken" in input
+      ? previewStore.get(input.previewToken)
+      : {
+          fileName: input.fileName,
+          previewToken: nanoid(16),
+          createdAt: Date.now(),
+          rows: input.rows,
+          errors: input.errors
+        };
 
   if (!payload || Date.now() - payload.createdAt > PREVIEW_TTL_MS) {
-    previewStore.delete(previewToken);
+    if ("previewToken" in input) {
+      previewStore.delete(input.previewToken);
+    }
     throw createHttpError(404, "Import preview session not found or expired");
   }
 
@@ -198,7 +219,9 @@ export async function commitInventoryImport(previewToken: string, uploadedById: 
     return importLog;
   });
 
-  previewStore.delete(previewToken);
+  if ("previewToken" in input) {
+    previewStore.delete(input.previewToken);
+  }
 
   return {
     importLog: result,

@@ -15,7 +15,30 @@ const currentInventorySchema = z.object({
 });
 
 const commitSchema = z.object({
-  previewToken: z.string().min(1)
+  previewToken: z.string().min(1).optional(),
+  fileName: z.string().min(1).optional(),
+  rows: z
+    .array(
+      z.object({
+        skuCode: z.string().min(1),
+        itemName: z.string().min(1),
+        shelf: z.string().nullable(),
+        type: z.string().nullable(),
+        quantity: z.number().nullable(),
+        size: z.string().nullable(),
+        color: z.string().nullable(),
+        imageUrl: z.string().nullable()
+      })
+    )
+    .optional(),
+  errors: z
+    .array(
+      z.object({
+        row: z.number(),
+        message: z.string()
+      })
+    )
+    .optional()
 });
 
 export async function searchItems(req: Request, res: Response) {
@@ -51,7 +74,16 @@ export async function previewImport(req: Request, res: Response) {
 
 export async function commitImport(req: Request, res: Response) {
   const payload = commitSchema.parse(req.body);
-  const result = await commitInventoryImport(payload.previewToken, req.user!.id);
+  const result = await commitInventoryImport(
+    payload.previewToken
+      ? { previewToken: payload.previewToken }
+      : {
+          fileName: payload.fileName ?? "inventory.xlsx",
+          rows: payload.rows ?? [],
+          errors: payload.errors ?? []
+        },
+    req.user!.id
+  );
 
   await createAuditLog({
     actorId: req.user!.id,

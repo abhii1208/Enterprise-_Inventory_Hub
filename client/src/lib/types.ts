@@ -63,6 +63,16 @@ export type ImportPreview = {
   fileName: string;
   rowCount: number;
   failedRows: number;
+  rows: Array<{
+    skuCode: string;
+    itemName: string;
+    shelf: string | null;
+    type: string | null;
+    quantity: number | null;
+    size: string | null;
+    color: string | null;
+    imageUrl: string | null;
+  }>;
   sampleRows: Array<{
     skuCode: string;
     itemName: string;

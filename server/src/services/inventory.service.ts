@@ -5,9 +5,24 @@ export async function searchInventory(skuCode: string) {
   const normalized = normalizeSku(skuCode);
   const records = await prisma.inventoryItem.findMany({
     where: {
-      skuCodeNormalized: {
-        equals: normalized
-      }
+      OR: [
+        {
+          skuCodeNormalized: {
+            equals: normalized
+          }
+        },
+        {
+          skuCodeNormalized: {
+            startsWith: normalized
+          }
+        },
+        {
+          skuCode: {
+            contains: skuCode.trim(),
+            mode: "insensitive"
+          }
+        }
+      ]
     },
     orderBy: [{ skuCode: "asc" }, { itemName: "asc" }, { shelf: "asc" }]
   });

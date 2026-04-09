@@ -252,7 +252,7 @@ export function InventoryImportPage() {
                 {previewMutation.data ? (
                   <Button
                     variant="secondary"
-                    onClick={() => commitMutation.mutate(previewMutation.data.previewToken)}
+                    onClick={() => commitMutation.mutate(previewMutation.data)}
                     disabled={commitMutation.isPending}
                   >
                     {commitMutation.isPending ? "Importing..." : "Save imported inventory"}

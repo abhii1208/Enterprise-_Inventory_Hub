@@ -28,7 +28,7 @@ export async function previewImport(file: File) {
   return response.data.data;
 }
 
-export async function commitImport(previewToken: string) {
-  const response = await http.post<ApiResponse<unknown>>("/inventory/import/commit", { previewToken });
+export async function commitImport(payload: ImportPreview) {
+  const response = await http.post<ApiResponse<unknown>>("/inventory/import/commit", payload);
   return response.data;
 }
